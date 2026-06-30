@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>URL Check</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>URL Check</h1>
+      <label for="url-input">Enter a URL</label>
+      <p>Note: Since the existence check is mocked on the client, for any valid URL, it will report “URL exists” unless the path contains missing (e.g. https://example.com/missing-stuff). It also reports whether the path looks like a file or folder based on the extension and trailing slash.</p>
+      <input id="url-input" type="text" placeholder="https://example.com/page" autocomplete="off" />
+      <p id="format-status" class="status"></p>
+      <p id="existence-status" class="status"></p>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
