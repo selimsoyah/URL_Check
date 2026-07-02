@@ -6,16 +6,16 @@ const input = document.getElementById("url-input") as HTMLInputElement;
 const formatStatus = document.getElementById("format-status")!;
 const existenceStatus = document.getElementById("existence-status")!;
 
-let requestId = 0;
-
 const throttledExistenceCheck = throttle((url: string) => {
-  const currentRequest = ++requestId;
   existenceStatus.textContent = "Checking if URL exists...";
   existenceStatus.className = "status checking";
 
   checkUrlExists(url)
     .then((result) => {
-      if (currentRequest !== requestId) return;
+      // Bug fix: compare against the live input value when the response arrives.
+      // A requestId counter was not enough — changing one valid URL to another did
+      // not invalidate the previous request, so an old result could flash briefly.
+      if (input.value.trim() !== url) return;
 
       if (result.exists) {
         existenceStatus.textContent = `URL exists (${result.type})`;
@@ -26,7 +26,7 @@ const throttledExistenceCheck = throttle((url: string) => {
       }
     })
     .catch(() => {
-      if (currentRequest !== requestId) return;
+      if (input.value.trim() !== url) return;
       existenceStatus.textContent = "Could not check URL";
       existenceStatus.className = "status invalid";
     });
@@ -38,19 +38,21 @@ function onInput() {
   if (!value.trim()) {
     formatStatus.textContent = "";
     existenceStatus.textContent = "";
-    requestId++;
     return;
   }
 
   if (isValidUrl(value)) {
     formatStatus.textContent = "Valid URL format";
     formatStatus.className = "status valid";
+    // Bug fix: clear any result from a previous URL as soon as the input changes,
+    // so we never show an existence message that belongs to an older value.
+    existenceStatus.textContent = "";
+    existenceStatus.className = "status";
     throttledExistenceCheck(value.trim());
   } else {
     formatStatus.textContent = "Invalid URL format";
     formatStatus.className = "status invalid";
     existenceStatus.textContent = "";
-    requestId++;
   }
 }
 

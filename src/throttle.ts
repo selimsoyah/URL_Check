@@ -4,22 +4,29 @@ export function throttle<T extends (...args: never[]) => void>(
 ): T {
   let lastRun = 0;
   let timer: ReturnType<typeof setTimeout> | null = null;
+  let pendingArgs: Parameters<T> | null = null;
 
   return ((...args: Parameters<T>) => {
+    pendingArgs = args;
     const now = Date.now();
-    const remaining = delayMs - (now - lastRun);
+    const elapsed = now - lastRun;
 
-    const run = () => {
+    const invoke = () => {
       lastRun = Date.now();
       timer = null;
-      fn(...args);
+      const argsToUse = pendingArgs;
+      pendingArgs = null;
+      if (argsToUse) fn(...argsToUse);
     };
 
-    if (remaining <= 0) {
+    if (elapsed >= delayMs) {
       if (timer) clearTimeout(timer);
-      run();
+      invoke();
     } else if (!timer) {
-      timer = setTimeout(run, remaining);
+      // Bug fix: the old version ignored calls while a timer was already pending,
+      // so the last URL typed during the wait window was dropped. We always keep
+      // the latest args and still fire once when the window ends.
+      timer = setTimeout(invoke, delayMs - elapsed);
     }
   }) as T;
 }
